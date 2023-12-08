@@ -1,0 +1,36 @@
+name = "lapce-copilot"
+version = "1.0.0"
+author = "MinusGix"
+display-name = "Copilot (Unofficial)"
+description = "Unofficial Github Copilot plugin"
+wasm = "lapce-copilot.wasm"
+
+[activation]
+language = ["rust"]
+workspace-contains = ["**/Cargo.toml"]
+
+[config."node.path"]
+default = ""
+description = "Path to nodejs executable, used to launch Copilot"
+
+# TODO: allow providing a custom copilot agent.js
+
+#[config."lsp.serverPath"]
+#default = ""
+#description = "Path to custom LSP executable"
+
+# [config."lsp.serverArgs"]
+# default = []
+# description = ""
+
+# [config."lspSettingArray"]
+# default = []
+# description = ""
+
+# [config."lspSettingString"]
+# default = ""
+# description = ""
+
+# [config."lspSettingBool"]
+# default = false
+# description = ""
