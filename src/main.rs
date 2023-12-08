@@ -8,7 +8,10 @@ use std::{cell::Cell, io::Write, path::PathBuf, process::Stdio, rc::Rc};
 
 use anyhow::Result;
 use copilot::{
-    EditorConfiguration, EditorInfo, EditorPluginInfo, SetEditorInfo, SetEditorInfoParams,
+    CheckAuthStatus, CheckAuthStatusParams, CheckAuthStatusResult, EditorConfiguration, EditorInfo,
+    EditorPluginInfo, SetEditorInfo, SetEditorInfoParams, SignInConfirm, SignInConfirmParams,
+    SignInConfirmResult, SignInInitiate, SignInInitiateParams, SignInInitiateResult, SignOut,
+    SignOutParams, SignOutResult,
 };
 use jsonrpc_lite::{Id, JsonRpc, Params};
 use lapce_plugin::{
@@ -170,6 +173,38 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
             "RESPONSE TO Copilot's setEditorInfo WAS NOT OK: {resp:?}"
         ));
     }
+
+    let status: CheckAuthStatusResult = lsp.send_request_blocking(
+        CheckAuthStatus::METHOD,
+        CheckAuthStatusParams { options: None },
+    )?;
+
+    PLUGIN_RPC.stderr(&format!("AUTH STATUS: {status:?}"));
+    if status.status == "OK" {
+        return Ok(());
+
+        // Sign out for testing
+        // let resp: SignOutResult = lsp.send_request_blocking(SignOut::METHOD, SignOutParams {})?;
+        // PLUGIN_RPC.stderr(&format!("SIGN OUT RESULT: {resp:?}"));
+
+        // let status: CheckAuthStatusResult = lsp.send_request_blocking(
+        //     CheckAuthStatus::METHOD,
+        //     CheckAuthStatusParams { options: None },
+        // )?;
+
+        // PLUGIN_RPC.stderr(&format!("AUTH STATUS NEW: {status:?}"));
+    }
+
+    // Log in
+    let resp: SignInInitiateResult =
+        lsp.send_request_blocking(SignInInitiate::METHOD, SignInInitiateParams {})?;
+
+    PLUGIN_RPC.stderr(&format!("SIGN IN INITIATE RESULT: {resp:?}"));
+
+    let resp: SignInConfirmResult =
+        lsp.send_request_blocking(SignInConfirm::METHOD, SignInConfirmParams {})?;
+
+    PLUGIN_RPC.stderr(&format!("SIGN IN CONFIRM RESULT: {resp:?}"));
 
     // let child = std::process::Command::new(node_path)
     //     .args(args)
