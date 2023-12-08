@@ -1,6 +1,22 @@
 use lapce_plugin::psp_types::Request;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Status {
+    #[serde(rename = "OK")]
+    Ok,
+    MaybeOk,
+    NotSignedIn,
+    NotAuthorized,
+    FailedToGetToken,
+    TokenInvalid,
+}
+impl Status {
+    pub fn is_ok(self) -> bool {
+        self == Status::Ok || self == Status::MaybeOk
+    }
+}
+
 #[derive(Debug)]
 pub enum SetEditorInfo {}
 
@@ -116,10 +132,15 @@ pub struct CheckAuthStatusOptions {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CheckAuthStatusResult {
-    /// "OK" | "NotSignedIn" | ?
-    pub status: String,
+    pub status: Status,
     /// Github user
     pub user: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum SignInStatus {
+    AlreadySignedIn,
+    PromptUserDeviceFlow,
 }
 
 /// Start signing in  
@@ -143,19 +164,18 @@ impl Request for SignInInitiate {
 #[serde(rename_all = "camelCase")]
 pub struct SignInInitiateResult {
     // TODO: could we make this an enum...?
-    /// "PromptUserDeviceFlow" | "AlreadySignedIn"
-    pub status: String,
-    /// Only for "PromptUserDeviceFlow"
+    pub status: SignInStatus,
+    /// Only for [`Status::PromptUserDeviceFlow`]
     /// Short string of numbers
     pub user_code: Option<String>,
-    /// Only for "PromptUserDeviceFlow"
+    /// Only for [`Status::PromptUserDeviceFlow`]
     pub verification_uri: Option<String>,
-    /// Only for "PromptUserDeviceFlow"
+    /// Only for [`Status::PromptUserDeviceFlow`]
     pub expires_in: Option<f32>,
-    /// Only for "PromptUserDeviceFlow"
+    /// Only for [`Status::PromptUserDeviceFlow`]
     pub interval: Option<f32>,
 
-    /// Only for "AlreadySignedIn"
+    /// Only for [`Status::AlreadySignedIn`]
     pub user: Option<String>,
 }
 

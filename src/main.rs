@@ -10,11 +10,12 @@ use anyhow::Result;
 use copilot::{
     CheckAuthStatus, CheckAuthStatusParams, CheckAuthStatusResult, EditorConfiguration, EditorInfo,
     EditorPluginInfo, SetEditorInfo, SetEditorInfoParams, SignInConfirm, SignInConfirmParams,
-    SignInConfirmResult, SignInInitiate, SignInInitiateParams, SignInInitiateResult, SignOut,
-    SignOutParams, SignOutResult,
+    SignInConfirmResult, SignInInitiate, SignInInitiateParams, SignInInitiateResult, SignInStatus,
+    SignOut, SignOutParams, SignOutResult, Status,
 };
 use jsonrpc_lite::{Id, JsonRpc, Params};
 use lapce_plugin::{
+    lsp::LspRef,
     psp_types::{
         lsp_types::{
             request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, MessageType,
@@ -180,10 +181,11 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
     )?;
 
     PLUGIN_RPC.stderr(&format!("AUTH STATUS: {status:?}"));
-    if status.status == "OK" {
-        return Ok(());
+    if status.status == Status::Ok {
+        // whir(lsp);
+        // return Ok(());
 
-        // Sign out for testing
+        // // Sign out for testing
         // let resp: SignOutResult = lsp.send_request_blocking(SignOut::METHOD, SignOutParams {})?;
         // PLUGIN_RPC.stderr(&format!("SIGN OUT RESULT: {resp:?}"));
 
@@ -201,119 +203,63 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
 
     PLUGIN_RPC.stderr(&format!("SIGN IN INITIATE RESULT: {resp:?}"));
 
+    match resp.status {
+        SignInStatus::AlreadySignedIn => {
+            PLUGIN_RPC.stderr("ALREADY SIGNED IN despite already checking that..");
+            whir(lsp);
+            return Ok(());
+        }
+        SignInStatus::PromptUserDeviceFlow => {
+            let Some(verification_uri) = &resp.verification_uri else {
+                PLUGIN_RPC.stderr("NO VERIFICATION URI");
+                anyhow::bail!("No verification uri: {resp:?}");
+            };
+            let Some(user_code) = &resp.user_code else {
+                PLUGIN_RPC.stderr("NO USER CODE");
+                anyhow::bail!("No user code: {resp:?}");
+            };
+            let message = format!("Input this code in the opened browser: {}", user_code);
+            PLUGIN_RPC.window_show_message(MessageType::INFO, message)?;
+
+            open(verification_uri)?;
+        }
+    }
+
     let resp: SignInConfirmResult =
         lsp.send_request_blocking(SignInConfirm::METHOD, SignInConfirmParams {})?;
 
     PLUGIN_RPC.stderr(&format!("SIGN IN CONFIRM RESULT: {resp:?}"));
 
-    // let child = std::process::Command::new(node_path)
-    //     .args(args)
-    //     .stdin(Stdio::piped())
-    //     .stdout(Stdio::piped())
-    //     .spawn()?;
+    whir(lsp);
 
-    // PLUGIN_RPC.stderr("Started");
+    Ok(())
+}
 
-    // state.copilot = Some(child);
+fn whir(lsp: LspRef) {}
 
-    // state.request(
-    //     Initialize::METHOD,
-    //     InitializeParams {
-    //         workspace_folders: None,
-    //         ..Default::default()
-    //     },
-    // );
-
-    // let res = PLUGIN_RPC.start_lsp(node_url, args, document_selector, options);
-    // match res {
-    //     Ok(_) => PLUGIN_RPC.stderr("Started LSP"),
-    //     Err(err) => PLUGIN_RPC.stderr(&format!("Failed to start LSP: {err:?}")),
-    // }
-
-    // let res = PLUGIN_RPC.execute_process(node_path.to_string(), args)?;
-
-    // let mut server_args = vec![];
-
-    // // Check for user specified LSP server path
-    // // ```
-    // // [lapce-plugin-name.lsp]
-    // // serverPath = "[path or filename]"
-    // // serverArgs = ["--arg1", "--arg2"]
-    // // ```
-    // if let Some(options) = params.initialization_options.as_ref() {
-    //     if let Some(lsp) = options.get("lsp") {
-    //         if let Some(args) = lsp.get("serverArgs") {
-    //             if let Some(args) = args.as_array() {
-    //                 if !args.is_empty() {
-    //                     server_args = vec![];
-    //                 }
-    //                 for arg in args {
-    //                     if let Some(arg) = arg.as_str() {
-    //                         server_args.push(arg.to_string());
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         if let Some(server_path) = lsp.get("serverPath") {
-    //             if let Some(server_path) = server_path.as_str() {
-    //                 if !server_path.is_empty() {
-    //                     let server_uri = Url::parse(&format!("urn:{}", server_path))?;
-    //                     PLUGIN_RPC.start_lsp(
-    //                         server_uri,
-    //                         server_args,
-    //                         document_selector,
-    //                         params.initialization_options,
-    //                     );
-    //                     return Ok(());
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // // Architecture check
-    // let _ = match VoltEnvironment::architecture().as_deref() {
-    //     Ok("x86_64") => "x86_64",
-    //     Ok("aarch64") => "aarch64",
-    //     _ => return Ok(()),
-    // };
-
-    // // OS check
-    // let _ = match VoltEnvironment::operating_system().as_deref() {
-    //     Ok("macos") => "macos",
-    //     Ok("linux") => "linux",
-    //     Ok("windows") => "windows",
-    //     _ => return Ok(()),
-    // };
-
-    // // Download URL
-    // // let _ = format!("https://github.com/<name>/<project>/releases/download/<version>/{filename}");
-
-    // // see lapce_plugin::Http for available API to download files
-
-    // let _ = match VoltEnvironment::operating_system().as_deref() {
-    //     Ok("windows") => {
-    //         format!("{}.exe", "[filename]")
-    //     }
-    //     _ => "[filename]".to_string(),
-    // };
-
-    // // Plugin working directory
-    // let volt_uri = VoltEnvironment::uri()?;
-    // let server_uri = Url::parse(&volt_uri)?.join("[filename]")?;
-
-    // // if you want to use server from PATH
-    // // let server_uri = Url::parse(&format!("urn:{filename}"))?;
-
-    // // Available language IDs
-    // // https://github.com/lapce/lapce/blob/HEAD/lapce-proxy/src/buffer.rs#L173
-    // PLUGIN_RPC.start_lsp(
-    //     server_uri,
-    //     server_args,
-    //     document_selector,
-    //     params.initialization_options,
-    // );
+fn open(url: &str) -> anyhow::Result<()> {
+    let os = VoltEnvironment::operating_system()?;
+    PLUGIN_RPC.stderr(&format!("OS: {os:?}; URL: {url:?}"));
+    match os.as_str() {
+        "linux" | "freebsd" | "netbsd" | "openbsd" | "solaris" | "android" => {
+            let _ = PLUGIN_RPC.execute_process("xdg-open".to_string(), vec![url.to_string()])?;
+        }
+        "macos" => {
+            let _ = PLUGIN_RPC.execute_process("open".to_string(), vec![url.to_string()])?;
+        }
+        "windows" => {
+            let _ = PLUGIN_RPC.execute_process(
+                "cmd".to_string(),
+                vec!["/C".to_string(), "start".to_string(), url.to_string()],
+            )?;
+        }
+        _ => {
+            let err = format!("Unsupported operating system: {os}",);
+            PLUGIN_RPC.window_show_message(MessageType::ERROR, err.clone())?;
+            PLUGIN_RPC.stderr(&err);
+            return Ok(());
+        }
+    }
 
     Ok(())
 }
