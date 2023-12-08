@@ -80,9 +80,10 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
     //     // like file:
     //     scheme: None,
     // }];
+    // TODO: obviously expand this document selector
     let document_selector: DocumentSelector = vec![DocumentFilter {
-        language: Some(String::from("toml")),
-        pattern: Some(String::from("**/Cargo.toml")),
+        language: Some(String::from("js")),
+        pattern: Some(String::from("**/*.js")),
         scheme: None,
     }];
 
@@ -128,15 +129,23 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
     let args = vec![agent_path.to_string_lossy().to_string()];
     // let options = None;
     PLUGIN_RPC.stderr(&format!("STARTING LSP: {node_url} {args:?}"));
-    let child = std::process::Command::new(node_path)
-        .args(args)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?;
 
-    PLUGIN_RPC.stderr("Started");
+    PLUGIN_RPC.start_lsp(
+        node_url,
+        args,
+        document_selector,
+        params.initialization_options,
+    )?;
 
-    state.copilot = Some(child);
+    // let child = std::process::Command::new(node_path)
+    //     .args(args)
+    //     .stdin(Stdio::piped())
+    //     .stdout(Stdio::piped())
+    //     .spawn()?;
+
+    // PLUGIN_RPC.stderr("Started");
+
+    // state.copilot = Some(child);
 
     // state.request(
     //     Initialize::METHOD,

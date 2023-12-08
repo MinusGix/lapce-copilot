@@ -7,7 +7,7 @@ wasm = "lapce-copilot.wasm"
 
 [activation]
 language = ["rust"]
-workspace-contains = ["**/Cargo.toml"]
+workspace-contains = ["**/*"]
 
 [config."node.path"]
 default = ""
