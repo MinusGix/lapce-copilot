@@ -7,6 +7,9 @@
 use std::{cell::Cell, io::Write, path::PathBuf, process::Stdio, rc::Rc};
 
 use anyhow::Result;
+use copilot::{
+    EditorConfiguration, EditorInfo, EditorPluginInfo, SetEditorInfo, SetEditorInfoParams,
+};
 use jsonrpc_lite::{Id, JsonRpc, Params};
 use lapce_plugin::{
     psp_types::{
@@ -20,6 +23,8 @@ use lapce_plugin::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
+
+pub mod copilot;
 
 #[derive(Default)]
 struct State {
@@ -130,12 +135,41 @@ fn initialize(state: &mut State, params: InitializeParams) -> Result<()> {
     // let options = None;
     PLUGIN_RPC.stderr(&format!("STARTING LSP: {node_url} {args:?}"));
 
-    PLUGIN_RPC.start_lsp(
+    let lsp = PLUGIN_RPC.start_lsp(
         node_url,
         args,
         document_selector,
         params.initialization_options,
     )?;
+
+    let resp: String = lsp.send_request_blocking(
+        SetEditorInfo::METHOD,
+        SetEditorInfoParams {
+            editor_info: EditorInfo {
+                name: "Lapce".to_string(),
+                version: "0.3.1".to_string(),
+            },
+            editor_plugin_info: EditorPluginInfo {
+                name: "lapce-copilot".to_string(),
+                version: "1.0.0".to_string(),
+            },
+            editor_configuration: Some(EditorConfiguration {
+                show_editor_completions: Some(true),
+                enable_auto_completions: Some(true),
+                disabled_languages: Some(vec![]),
+                ..Default::default()
+            }),
+            auth_provider: None,
+            network_proxy: None,
+            options: None,
+        },
+    )?;
+
+    if resp != "OK" {
+        PLUGIN_RPC.stderr(&format!(
+            "RESPONSE TO Copilot's setEditorInfo WAS NOT OK: {resp:?}"
+        ));
+    }
 
     // let child = std::process::Command::new(node_path)
     //     .args(args)
