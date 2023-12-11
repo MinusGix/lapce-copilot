@@ -12,21 +12,6 @@ It will try to find the `node` binary in your path, but you can also change the 
 
 This will immediately open a browser window to the Github login page with a notification containing a code. Enter that code into the website to authorize Copilot. You shouldn't need to do this again.
 
-## TODO
-- Properly send Cancel when the user is typing
-    - This requires WorkDoneProgress stuff to be implemented in Lapce, then this plugin can implement it to properly adapt it for Copilot.
-- Better login experience
-    - Currently you get shown a notification with a code and it auto opens the window. Ideally we would be able to just open a tab with it filled in already. How does VSCode's github sign-in work??
-    - We could also copy it to the clipboard.
-- Let users launch agent.js with `bun`/`deno`?? Might need to allow extra args for that
-- Copilot chat panel
-- Copilot chat in palette
-- Copilot chat in editor + applying suggestions
-- Backspacing can cause slight flickering?
-- Palette commands
-    - signing out
-    - uh
-
 ## Updating
 If Copilot ends up out of date, then it can be updated by copying the `dist/` folder from the [copilot.vim](https://github.com/github/copilot.vim/) repo. That repo contains an agent.js which this plugin starts as the actual core copilot.  
 
