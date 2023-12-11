@@ -86,6 +86,7 @@ dependencies = [
 [[package]]
 name = "lapce-plugin"
 version = "0.1.1"
+source = "git+https://github.com/lapce/lapce-plugin-rust.git#a529f3ab570889890db178622b6104ed17b2168d"
 dependencies = [
  "anyhow",
  "bytes",
@@ -121,6 +122,7 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 [[package]]
 name = "lsp-types"
 version = "0.94.1"
+source = "git+https://github.com/lapce/lsp-types?rev=3031a76c4452f46ed265eb0154d6bb1d10ddb9f6#3031a76c4452f46ed265eb0154d6bb1d10ddb9f6"
 dependencies = [
  "bitflags",
  "serde",
@@ -159,6 +161,8 @@ dependencies = [
 [[package]]
 name = "psp-types"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d02f4927e711603ca3e881d4eb194bfd2b2b28ae2ac70fbd52ea34a58b659def"
 dependencies = [
  "lsp-types",
  "serde",
