@@ -1,5 +1,9 @@
-use lapce_plugin::psp_types::Request;
+use lapce_plugin::psp_types::{
+    lsp_types::{Position, Range, Url},
+    Notification, Request,
+};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Status {
@@ -32,7 +36,7 @@ pub struct SetEditorInfoParams {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auth_provider: Option<AuthProvider>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub options: Option<Options>,
+    pub options: Option<Value>,
 }
 
 impl Request for SetEditorInfo {
@@ -96,12 +100,6 @@ pub struct NetworkProxy {
 pub struct AuthProvider {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Options {
-    // ?
 }
 
 #[derive(Debug)]
@@ -222,4 +220,154 @@ impl Request for SignOut {
 pub struct SignOutResult {
     /// "NotSignedin" | ?
     pub status: String,
+}
+
+#[derive(Debug)]
+pub enum GetCompletions {}
+
+impl Request for GetCompletions {
+    type Params = GetCompletionsParams;
+
+    type Result = GetCompletionsResult;
+
+    const METHOD: &'static str = "getCompletions";
+}
+
+#[derive(Debug)]
+pub enum GetCompletionsCycling {}
+
+impl Request for GetCompletionsCycling {
+    type Params = GetCompletionsParams;
+
+    type Result = GetCompletionsResult;
+
+    const METHOD: &'static str = "getCompletionsCycling";
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetCompletionsParams {
+    pub doc: GetCompletionsDoc,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetCompletionsDoc {
+    pub position: Position,
+    pub uri: Url,
+    pub version: i32,
+    /// Whether to insert spaces maybe?
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub insert_spaces: Option<bool>,
+    /// The size of tabs in the document
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tab_size: Option<u16>,
+    /// ??
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relative_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub if_inserted: Option<IfInserted>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IfInserted {
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end: Option<Position>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetCompletionsResult {
+    pub completions: Vec<Completion>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Completion {
+    pub uuid: String,
+    /// Full line of text
+    pub text: String,
+    pub range: Range,
+    /// Text after the current cursor position
+    pub display_text: String,
+    pub position: Position,
+    pub doc_version: u64,
+}
+
+/// I think this is supposed to be sent when the completion is shown?
+#[derive(Debug)]
+pub enum NotifyShown {}
+
+impl Notification for NotifyShown {
+    type Params = NotifyShownParams;
+
+    const METHOD: &'static str = "notifyShown";
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NotifyShownParams {
+    pub uuid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<Value>,
+}
+
+/// This is supposed to be sent when a completion is accepted
+#[derive(Debug)]
+pub enum NotifyAccepted {}
+
+impl Notification for NotifyAccepted {
+    type Params = NotifyAcceptedParams;
+
+    const METHOD: &'static str = "notifyAccepted";
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NotifyAcceptedParams {
+    pub uuid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<Value>,
+}
+
+/// This is supposed to be sent when a completion is rejected
+#[derive(Debug)]
+pub enum NotifyRejected {}
+
+impl Notification for NotifyRejected {
+    type Params = NotifyRejectedParams;
+
+    const METHOD: &'static str = "notifyRejected";
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NotifyRejectedParams {
+    pub uuid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<Value>,
+}
+
+#[derive(Debug)]
+pub enum Cancel {}
+
+impl Request for Cancel {
+    type Params = CancelParams;
+
+    type Result = CancelResult;
+
+    const METHOD: &'static str = "cancel";
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CancelParams {
+    /// Request id
+    pub id: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CancelResult {
+    // ??
 }

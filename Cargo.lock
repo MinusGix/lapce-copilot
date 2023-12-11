@@ -74,22 +74,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "jsonrpc-lite"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb4128aba82294c14af2998831c4df3c843940e92b5cfc41bac1229d1e63b88c"
-dependencies = [
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "lapce-copilot"
 version = "1.0.0"
 dependencies = [
  "anyhow",
- "jsonrpc-lite 0.6.0",
  "lapce-plugin",
  "serde",
  "serde_json",
@@ -98,12 +86,11 @@ dependencies = [
 [[package]]
 name = "lapce-plugin"
 version = "0.1.1"
-source = "git+https://github.com/lapce/lapce-plugin-rust.git#a529f3ab570889890db178622b6104ed17b2168d"
 dependencies = [
  "anyhow",
  "bytes",
  "http",
- "jsonrpc-lite 0.5.0",
+ "jsonrpc-lite",
  "lapce-wasi-experimental-http",
  "once_cell",
  "psp-types",
@@ -134,8 +121,6 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 [[package]]
 name = "lsp-types"
 version = "0.94.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c66bfd44a06ae10647fe3f8214762e9369fd4248df1350924b4ef9e770a85ea1"
 dependencies = [
  "bitflags",
  "serde",
@@ -174,8 +159,6 @@ dependencies = [
 [[package]]
 name = "psp-types"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d02f4927e711603ca3e881d4eb194bfd2b2b28ae2ac70fbd52ea34a58b659def"
 dependencies = [
  "lsp-types",
  "serde",
